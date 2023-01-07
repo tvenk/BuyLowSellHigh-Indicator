@@ -11,12 +11,11 @@ doc = BeautifulSoup(result.content, "html.parser")
 divs = doc.find_all("div")
 price = ""
 for div in divs:
-    if (str(div).startswith('<div style="margin-bottom:10px"')):
+    if (str(div).startswith('<div class="ui large green button"')):
         div_text = str(div)
-        index = div_text.index("$")
-        index2 = div_text.find("per share")
-        price = div_text[index:index2]
+        price = div.text
         break
+        
 price = price.rstrip()
 realvalue = price.lstrip("$")
 print("{0} Real value: $".format(ticker),realvalue) 
@@ -46,4 +45,3 @@ if float(cprice) < float(realvalue):
     print("Buy!")
 else:
     print("Sell!")
-
