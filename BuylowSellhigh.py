@@ -16,8 +16,8 @@ for div in divs:
         price = div.text
         break
         
-price = price.rstrip()
-realvalue = price.lstrip("$")
+
+realvalue = price
 print("{0} Real value: $".format(ticker),realvalue) 
 
 
@@ -38,10 +38,12 @@ for tag in tags:
          cprice = tag["value"]
          break
 
-print("Current {0} price: $".format(ticker),cprice) 
+print("Current {0} price: $".format(ticker),cprice)
+
 
 
 if float(cprice) < float(realvalue):
     print("Buy!")
 else:
     print("Sell!")
+
