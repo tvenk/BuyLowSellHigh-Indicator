@@ -23,8 +23,8 @@ print("{0} Real value: $".format(ticker),realvalue)
 
 url2 ="https://finance.yahoo.com/quote/{0}/".format(ticker) 
 
-
-result = requests.get(url2)
+headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'} 
+result = requests.get(url2, headers=headers)
 
 doc2 = BeautifulSoup(result.text, "html.parser")
 
@@ -39,7 +39,6 @@ for tag in tags:
          break
 
 print("Current {0} price: $".format(ticker),cprice)
-
 
 
 if float(cprice) < float(realvalue):
