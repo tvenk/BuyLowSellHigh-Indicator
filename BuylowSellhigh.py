@@ -5,7 +5,7 @@ import requests
 ticker =""
 
 while ticker != 0 or ticker != 1:
-    ticker = input("Type in all caps the ticker symbol you want to check. Do you want to close? 1 = Yes 0 = No: ")
+    ticker = input("Type the ticker symbol you want to check. Do you want to close? 1 = Yes 0 = No: ").upper()
     if ticker == 1:
         exit()
 
