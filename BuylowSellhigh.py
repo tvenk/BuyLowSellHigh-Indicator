@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+import re
 
 
 ticker =""
@@ -18,14 +19,17 @@ while ticker != 0 or ticker != 1:
     divs = doc.find_all("div")
     price = ""
     for div in divs:
-        if (str(div).startswith('<div class="ui large green button"')):
+        if (str(div).startswith('<div class="symbolDescriptionNoMargin"')):
             div_text = str(div)
-            price = div.text
+            money_pattern = r"\$\d+(?:\.\d{2})?"  # Matches "$" followed by one or more digits, optionally followed by a decimal point and two decimal digits
+            match = re.search(money_pattern, div_text)
+            if match:
+                price = match.group()
+                price = price[1:]
             break
             
 
     realvalue = price
-    realvalue = realvalue.replace(',','')
     print("{0} Real value: $".format(ticker),realvalue) 
 
 
@@ -40,11 +44,13 @@ while ticker != 0 or ticker != 1:
 
     tags = doc2.find_all("fin-streamer")
 
-    for tag in tags:
-        if tag["data-symbol"] == ticker: 
 
-             cprice = tag["value"]
-             break
+    for i in tags[2]:
+        cprice = i.text
+        
+        
+
+            
 
     print("Current {0} price: $".format(ticker),cprice)
 
