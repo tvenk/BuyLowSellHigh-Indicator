@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Ticker Analyzer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .buy {
+            color: green;
+        }
+        .sell {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stock Ticker Analyzer</h1>
+    <input type="text" id="tickerInput" placeholder="Enter ticker symbol">
+    <button onclick="analyzeTicker()">Analyze</button>
+    <div id="result"></div>
+
+    <script>
+        async function analyzeTicker() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Analyzing...';
+
+            try {
+                const response = await fetch(`/analyze/${ticker}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                let recommendation = '';
+                if (parseFloat(data.currentPrice) < parseFloat(data.realValue)) {
+                    recommendation = '<span class="buy">Buy!</span>';
+                } else {
+                    recommendation = '<span class="sell">Sell!</span>';
+                }
+
+                resultDiv.innerHTML = `
+                    <p>${data.ticker} Real value: $${data.realValue}</p>
+                    <p>Current ${data.ticker} price: $${data.currentPrice}</p>
+                    <p>${recommendation}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
+
