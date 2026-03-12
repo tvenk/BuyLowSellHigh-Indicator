@@ -3,63 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Ticker Analyzer</title>
+    <title>BuyLowSellHigh Analyzer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
             padding: 20px;
+            background-color: #f9f9f9;
         }
-        #result {
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 8px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex: 1;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover { background-color: #555; }
+
+        #result, #stoplossSection {
             margin-top: 20px;
-            font-weight: bold;
         }
-        .buy {
-            color: green;
+        .buy  { color: green; font-weight: bold; font-size: 1.2rem; }
+        .sell { color: red;   font-weight: bold; font-size: 1.2rem; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
         }
-        .sell {
-            color: red;
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
         }
+        th { background-color: #333; color: white; }
+        tr:nth-child(even) { background-color: #f0f0f0; }
+
+        .atr-note {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        .loading { color: #888; font-style: italic; }
+        .error   { color: red; }
+        #stoplossSection { display: none; }
     </style>
 </head>
 <body>
-    <h1>Stock Ticker Analyzer</h1>
-    <input type="text" id="tickerInput" placeholder="Enter ticker symbol">
-    <button onclick="analyzeTicker()">Analyze</button>
+    <h1>📈 BuyLowSellHigh Analyzer</h1>
+
+    <!-- Ticker Input -->
+    <div class="input-row">
+        <input type="text" id="tickerInput" placeholder="Enter ticker (e.g. AAPL)" />
+        <button onclick="analyzeTicker()">Analyze</button>
+    </div>
+
+    <!-- Analysis Result -->
     <div id="result"></div>
 
+    <!-- Stop Loss Section (shown after analysis) -->
+    <div id="stoplossSection">
+        <h3>Stop Loss Calculator</h3>
+        <div class="input-row">
+            <input type="number" id="entryPrice" placeholder="Enter your entry price ($)" step="0.01" />
+            <button onclick="calculateStopLoss()">Calculate</button>
+        </div>
+        <div id="stoplossResult"></div>
+    </div>
+
     <script>
+        let currentTicker = '';
+
         async function analyzeTicker() {
-            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            currentTicker = document.getElementById('tickerInput').value.toUpperCase().trim();
             const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = 'Analyzing...';
+            const stoplossSection = document.getElementById('stoplossSection');
+
+            if (!currentTicker) {
+                resultDiv.innerHTML = '<p class="error">Please enter a ticker symbol.</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="loading">Analyzing...</p>';
+            stoplossSection.style.display = 'none';
+            document.getElementById('stoplossResult').innerHTML = '';
 
             try {
-                const response = await fetch(`/analyze/${ticker}`);
+                const response = await fetch(`/analyze/${currentTicker}`);
                 const data = await response.json();
 
-                if (data.error) {
-                    throw new Error(data.error);
-                }
+                if (data.error) throw new Error(data.error);
 
-                let recommendation = '';
-                if (parseFloat(data.currentPrice) < parseFloat(data.realValue)) {
-                    recommendation = '<span class="buy">Buy!</span>';
-                } else {
-                    recommendation = '<span class="sell">Sell!</span>';
-                }
+                const signalClass = data.signal === 'Buy!' ? 'buy' : 'sell';
 
                 resultDiv.innerHTML = `
-                    <p>${data.ticker} Real value: $${data.realValue}</p>
-                    <p>Current ${data.ticker} price: $${data.currentPrice}</p>
-                    <p>${recommendation}</p>
+                    <p><strong>${data.ticker}</strong> Intrinsic Value: <strong>$${data.realValue}</strong></p>
+                    <p>Current Market Price: <strong>$${data.currentPrice}</strong></p>
+                    <p>Signal: <span class="${signalClass}">${data.signal}</span></p>
                 `;
+
+                // Always show stop loss section after analysis
+                stoplossSection.style.display = 'block';
+
             } catch (error) {
-                resultDiv.innerHTML = `Error: ${error.message}`;
+                resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                stoplossSection.style.display = 'none';
             }
         }
+
+        async function calculateStopLoss() {
+            const entryPrice = document.getElementById('entryPrice').value;
+            const resultDiv = document.getElementById('stoplossResult');
+
+            if (!entryPrice || parseFloat(entryPrice) <= 0) {
+                resultDiv.innerHTML = '<p class="error">Please enter a valid entry price.</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="loading">Calculating ATR stop losses...</p>';
+
+            try {
+                const response = await fetch(`/stoploss/${currentTicker}/${entryPrice}`);
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                resultDiv.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Style</th>
+                                <th>Multiplier</th>
+                                <th>Stop Loss Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Day Trading</td>
+                                <td>1x ATR</td>
+                                <td>$${data.stopLoss.dayTrading}</td>
+                            </tr>
+                            <tr>
+                                <td>Swing Trading</td>
+                                <td>2x ATR</td>
+                                <td>$${data.stopLoss.swingTrading}</td>
+                            </tr>
+                            <tr>
+                                <td>Trend Following</td>
+                                <td>3x ATR</td>
+                                <td>$${data.stopLoss.trendFollowing}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="atr-note">ATR (14-day): $${data.atr} &nbsp;|&nbsp; Entry Price: $${data.entryPrice}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Allow Enter key to trigger analyze
+        document.getElementById('tickerInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') analyzeTicker();
+        });
+
+        // Allow Enter key on entry price to trigger stop loss calc
+        document.getElementById('entryPrice').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') calculateStopLoss();
+        });
     </script>
 </body>
 </html>
-
