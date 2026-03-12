@@ -2,24 +2,64 @@
 
 ## 1. Standalone Python Version
 
-This Python script provides a buy or sell rating on the ticker you enter by comparing the analyst real value price with the current market price. It helps investors to dollar cost average.
+This Python script provides a buy or sell rating on any ticker by comparing
+the intrinsic (real) value from Macroaxis against the current market price
+from Yahoo Finance. After the signal, enter your intended entry price to
+receive ATR-based stop loss levels tailored for day trading, swing trading,
+and trend following.
 
 ### Installation
 
-To run the code, make sure to install these dependencies:
+#### Windows
+```
+pip install beautifulsoup4 requests
+```
 
-1. Open a terminal or command prompt
-2. Install BeautifulSoup using pip:
+#### Linux (Debian/Ubuntu/MX Linux)
+```
+sudo apt install python3-bs4 python3-requests
+```
+Or via virtual environment (recommended):
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install beautifulsoup4 requests
+```
 
-pip install beautifulsoup4
+---
 
+### Running the Script
 
-3. Install requests:
+#### Windows
+```
+python BuylowSellhigh.py
+```
 
-pip install requests
+#### Linux
+```
+python3 BuylowSellhigh.py
+```
 
+---
+
+### Usage
+1. Type a ticker symbol (e.g. `AAPL`, `TSLA`, `SPY`)
+2. View the intrinsic value vs current price and **Buy/Sell** signal
+3. Enter your intended entry price
+4. Receive stop loss levels for three trading styles:
+
+| Style        | Multiplier | Description               |
+|--------------|------------|---------------------------|
+| Day Trading  | 1x ATR     | Tight stop, short-term    |
+| Swing        | 2x ATR     | Medium-term holds         |
+| Trend Follow | 3x ATR     | Wide stop, long-term      |
+
+5. Type `1` to exit, `0` to quit the loop
+
+---
 
 ## 2. Upgraded WebApp Version
+
 
 This version provides a backend with Flask and Python (`app.py`), while the frontend is displayed via JavaScript (`index.html`).
 
